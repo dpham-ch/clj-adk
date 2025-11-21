@@ -1,7 +1,7 @@
 (ns clj-adk.schemas
-  (:import [com.google.adk.agents BaseAgent]
-           [com.google.adk.models Model]
-           [com.google.adk.tools BaseTool]))
+  #?(:clj (:import [com.google.adk.agents BaseAgent]
+                   [com.google.adk.models Model]
+                   [com.google.adk.tools BaseTool])))
 
 (def AgentType
   [:enum :llm :sequential :parallel :loop])
@@ -9,16 +9,25 @@
 (def ModelType
   [:enum :gemini])
 
+(def ClientSchema
+  [:map
+   [:api-key {:optional true} :string]
+   [:vertex-ai {:optional true} :boolean]
+   [:project {:optional true} :string]
+   [:location {:optional true} :string]])
+
 (def GeminiSchema
   [:map
    [:model-name :string]
    [:api-key {:optional true} :string]])
 
 (def ToolSchema
-  [:fn #(instance? BaseTool %)])
+  #?(:clj [:fn #(instance? BaseTool %)]
+     :cljs [:any]))
 
 (def AgentSchema
-  [:fn #(instance? BaseAgent %)])
+  #?(:clj [:fn #(instance? BaseAgent %)]
+     :cljs [:any]))
 
 (def LlmAgentSchema
   [:map

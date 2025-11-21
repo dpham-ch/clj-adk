@@ -3,6 +3,12 @@
            [com.google.adk.models Model]
            [com.google.adk.tools BaseTool]))
 
+(def AgentType
+  [:enum :llm :sequential :parallel :loop])
+
+(def ModelType
+  [:enum :gemini])
+
 (def GeminiSchema
   [:map
    [:model-name :string]
@@ -19,7 +25,7 @@
    [:name :string]
    [:description {:optional true} :string]
    [:instruction {:optional true} :string]
-   [:model {:optional true} [:or :string [:fn #(instance? Model %)]]]
+   [:model {:optional true} [:or :string :any]]
    [:tools {:optional true} [:vector ToolSchema]]])
 
 (def SequentialAgentSchema

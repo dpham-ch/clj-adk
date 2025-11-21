@@ -1,6 +1,6 @@
-(ns adk.core-test
+(ns clj-adk.core-test
   (:require [clojure.test :refer :all]
-            [adk.core :refer :all])
+            [clj-adk.core :refer :all])
   (:import [com.google.adk.agents LlmAgent SequentialAgent ParallelAgent LoopAgent]
            [com.google.adk.models Gemini]
            [com.google.adk.tools FunctionTool]
@@ -16,8 +16,11 @@
                           :instruction "You are a test agent"
                           :model "gemini-pro"})]
     (is (instance? LlmAgent agent))
+    ;; Note: bean and from-java do not work here as LlmAgent does not follow JavaBean conventions (getters).
+    ;; We verify properties using the fluent accessors.
     (is (= "test-agent" (.name agent)))
     (is (= "A test agent" (.description agent)))
+    ;; instruction() returns an Instruction object (record), so we need to call instruction() on it.
     (is (= "You are a test agent" (.instruction (.instruction agent))))))
 
 (deftest sequential-agent-test

@@ -1,9 +1,52 @@
 (ns clj-adk.agents
-  (:require [clj-adk.core :as core]
+  (:require [clj-adk.interop :as interop]
             [clj-adk.schemas :as schemas]
             [malli.core :as m])
   (:import [com.google.adk.agents LlmAgent SequentialAgent ParallelAgent LoopAgent BaseAgent]
            [com.google.adk.agents InvocationContext]))
+
+(defn- llm-agent
+  "Creates an LlmAgent instance."
+  [config]
+  (if (m/validate schemas/LlmAgentSchema config)
+    (interop/props->java LlmAgent (LlmAgent/builder) config)
+    (throw (ex-info "Invalid LlmAgent configuration" (m/explain schemas/LlmAgentSchema config)))))
+
+(defn- sequential-agent
+  "Creates a SequentialAgent instance."
+  [config]
+  (if (m/validate schemas/SequentialAgentSchema config)
+    (let [config (if (:agents config)
+                   (-> config
+                       (assoc :sub-agents (:agents config))
+                       (dissoc :agents))
+                   config)]
+      (interop/props->java SequentialAgent (SequentialAgent/builder) config))
+    (throw (ex-info "Invalid SequentialAgent configuration" (m/explain schemas/SequentialAgentSchema config)))))
+
+(defn- parallel-agent
+  "Creates a ParallelAgent instance."
+  [config]
+  (if (m/validate schemas/ParallelAgentSchema config)
+    (let [config (if (:agents config)
+                   (-> config
+                       (assoc :sub-agents (:agents config))
+                       (dissoc :agents))
+                   config)]
+      (interop/props->java ParallelAgent (ParallelAgent/builder) config))
+    (throw (ex-info "Invalid ParallelAgent configuration" (m/explain schemas/ParallelAgentSchema config)))))
+
+(defn- loop-agent
+  "Creates a LoopAgent instance."
+  [config]
+  (if (m/validate schemas/LoopAgentSchema config)
+    (let [config (if (:agent config)
+                   (-> config
+                       (assoc :sub-agents [(:agent config)])
+                       (dissoc :agent))
+                   config)]
+      (interop/props->java LoopAgent (LoopAgent/builder) config))
+    (throw (ex-info "Invalid LoopAgent configuration" (m/explain schemas/LoopAgentSchema config)))))
 
 ;; Construction
 
@@ -16,16 +59,16 @@
         :invalid))))
 
 (defmethod create :llm [config]
-  (core/llm-agent (dissoc config :type)))
+  (llm-agent (dissoc config :type)))
 
 (defmethod create :sequential [config]
-  (core/sequential-agent (dissoc config :type)))
+  (sequential-agent (dissoc config :type)))
 
 (defmethod create :parallel [config]
-  (core/parallel-agent (dissoc config :type)))
+  (parallel-agent (dissoc config :type)))
 
 (defmethod create :loop [config]
-  (core/loop-agent (dissoc config :type)))
+  (loop-agent (dissoc config :type)))
 
 (defmethod create :invalid [config]
   (throw (ex-info "Invalid or missing agent type in config"

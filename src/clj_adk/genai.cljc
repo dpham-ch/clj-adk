@@ -1,13 +1,14 @@
 (ns clj-adk.genai
+  #?(:clj (:require [clj-adk.interop :as interop])
+     :cljs (:require ["@google/generative-ai" :refer [GoogleGenerativeAI]]))
   #?(:clj (:import [com.google.genai Client]
-                   [com.google.genai.types Content Part GenerateContentResponse])
-     :cljs (:require ["@google/generative-ai" :refer [GoogleGenerativeAI]])))
+                   [com.google.genai.types Content Part GenerateContentResponse GenerateContentConfig])))
 
 (defn create-content
   "Creates a Content object from a string."
   [text]
   #?(:clj (-> (Content/builder)
-              (.addPart (-> (Part/builder) (.text text) .build))
+              (.parts (java.util.Collections/singletonList (-> (Part/builder) (.text text) .build)))
               (.build))
      :cljs {:role "user" :parts [{:text text}]}))
 
@@ -29,8 +30,12 @@
   ([client model-id content]
    (generate-content client model-id content nil))
   ([client model-id content config]
-   #?(:clj (let [c (if (instance? Content content) content (create-content content))]
-             (.generateContent (.models client) model-id c config))
+   #?(:clj (let [c (if (instance? Content content) content (create-content content))
+                 cfg (when config
+                       (interop/props->java GenerateContentConfig
+                                            (GenerateContentConfig/builder)
+                                            config))]
+             (.generateContent (.models client) model-id c cfg))
       :cljs (let [model (.getGenerativeModel client #js {:model model-id})
                   c (if (string? content) content (clj->js content))]
               (.generateContent model c)))))

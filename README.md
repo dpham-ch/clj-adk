@@ -13,13 +13,7 @@ A Clojure and ClojureScript library that wraps the [Google Generative AI SDK](ht
 Add the following dependency to your `deps.edn`:
 
 ```clojure
-com.google.adk/google-adk {:mvn/version "0.3.0"}
-```
-
-*Note: Check for the latest version on Maven Central or use a git dependency if you are building from source.*
-
-```clojure
-clj-adk/clj-adk {:git/url "https://github.com/your-org/clj-adk" :sha "HEAD"}
+io.github.davidpham87/clj-adk {:git/sha "0a55000"}
 ```
 
 ### ClojureScript
